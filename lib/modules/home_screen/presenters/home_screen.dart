@@ -29,6 +29,7 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(title: const Text('Advanced Exchanger')),
       body: Padding(
@@ -36,22 +37,72 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Insert Amount',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            const Text("INSERT AMOUNT:"),
+            const SizedBox(height: 10),
+            // Single container with TextField and Dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.white,
+                border:
+                    Border.all(color: Colors.grey), // Border for the container
+                borderRadius: BorderRadius.circular(12),
               ),
-              onChanged: (value) {
-                setState(() {
-                  amount = double.tryParse(value) ?? 1.0;
-                });
-              },
+              child: Row(
+                children: [
+                  // Left side: TextField for amount
+                  Expanded(
+                    child: TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        // labelText: 'Insert Amount',
+                        border: InputBorder
+                            .none, // Remove inner border to make it seamless
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          amount = double.tryParse(value) ?? 1.0;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(
+                      width: 16), // Space between TextField and Dropdown
+
+                  // Right side: Dropdown for base currency
+                  BlocBuilder<CurrencyCubit, CurrencyState>(
+                    builder: (context, state) {
+                      if (state is CurrencyLoading) {
+                        return const CircularProgressIndicator();
+                      } else if (state is CurrencyLoaded) {
+                        return DropdownButton<String>(
+                          value: baseCurrency,
+                          items: state.rates.map((Currency currency) {
+                            return DropdownMenuItem<String>(
+                              value: currency.code,
+                              child: Text(currency.code),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              baseCurrency = newValue!;
+                            });
+                          },
+                          underline: Container(), // Remove default underline
+                          isDense: true,
+                        );
+                      } else if (state is CurrencyError) {
+                        return const Text('Error loading currencies');
+                      }
+                      return Container();
+                    },
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 20), // Add some spacing
+
             BlocBuilder<CurrencyCubit, CurrencyState>(
               builder: (context, state) {
                 if (state is CurrencyLoading) {
@@ -60,40 +111,8 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Dropdown for Base Currency
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: baseCurrency,
-                              items: state.rates.map((Currency currency) {
-                                return DropdownMenuItem<String>(
-                                  value: currency.code,
-                                  child: Row(
-                                    children: [
-                                      Text(currency.code),
-                                      const SizedBox(width: 8),
-                                      // Add flag or icon for each currency (optional)
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                              decoration: InputDecoration(
-                                labelText: 'Base Currency',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  baseCurrency = newValue!;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                      const Text("CONVERT TO :"),
+                      const SizedBox(height: 10),
 
                       // List of target currencies with conversion amounts
                       ListView.builder(
@@ -151,45 +170,71 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
     );
   }
 
-  // Helper method to build each target currency row
-  Widget _buildTargetCurrencyRow(List<Currency> rates, String selectedCurrency,
-      ValueChanged<String?> onCurrencyChanged, VoidCallback onDelete) {
+  _buildTargetCurrencyRow(
+    List<Currency> rates,
+    String selectedCurrency,
+    ValueChanged<String?> onCurrencyChanged,
+    VoidCallback onDelete,
+  ) {
     double convertedAmount = _calculateConversion(rates, selectedCurrency);
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Container with Converted Amount and Dropdown
           Expanded(
-            flex: 3,
-            child: Text(
-              convertedAmount.toStringAsFixed(2),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: DropdownButtonFormField<String>(
-              value: selectedCurrency,
-              items: rates.map((Currency currency) {
-                return DropdownMenuItem<String>(
-                  value: currency.code,
-                  child: Row(
-                    children: [
-                      Text(currency.code),
-                      const SizedBox(width: 8),
-                    ],
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.white,
+                border:
+                    Border.all(color: Colors.grey), // Border for the container
+                borderRadius: BorderRadius.circular(12), // Rounded corners
+              ),
+              child: Row(
+                children: [
+                  // Left: Converted amount text
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      convertedAmount.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
-              onChanged: onCurrencyChanged,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+
+                  const SizedBox(width: 16), // Space between text and dropdown
+
+                  // Right: Dropdown for selecting target currency
+                  DropdownButton<String>(
+                    value: selectedCurrency,
+                    items: rates.map((Currency currency) {
+                      return DropdownMenuItem<String>(
+                        value: currency.code,
+                        child: Text(currency.code), // Currency code
+                      );
+                    }).toList(),
+                    onChanged: onCurrencyChanged,
+                    underline: Container(), // Remove the default underline
+                    isDense: true, // Make it compact
+                    icon: const Icon(
+                        Icons.arrow_drop_down), // Custom dropdown icon
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 8),
+
+          const SizedBox(
+              width: 8), // Space between the container and delete button
+
+          // Delete Icon Button (outside the container)
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: onDelete,

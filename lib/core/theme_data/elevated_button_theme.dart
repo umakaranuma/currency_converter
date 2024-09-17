@@ -1,31 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import 'colour_scheme.dart';
-import 'text_theme.dart';
-
-var elevatedButtonThemeData = ElevatedButtonThemeData(
-  style: ButtonStyle(
-    backgroundColor: WidgetStateProperty.resolveWith(
-      (state) {
-        if (state.contains(WidgetState.pressed)) {
-          return secondaryDefault;
-        }
-        return primaryDefault;
-      },
-    ),
-
-    textStyle: WidgetStatePropertyAll(textTheme.labelMedium),
-    // maximumSize: const WidgetStatePropertyAll(Size(345, 48)),
-    fixedSize: const WidgetStatePropertyAll(
-      Size.fromHeight(48),
-    ),
-    shape: WidgetStatePropertyAll(
-      RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+// Function to create ElevatedButtonThemeData based on the given ColorScheme
+ElevatedButtonThemeData buildElevatedButtonTheme(ColorScheme colorScheme) {
+  return ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      foregroundColor: colorScheme.onPrimary, // Text color
+      backgroundColor: colorScheme.primary, // Background color
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12), // Rounded corners
+      ),
+      textStyle: GoogleFonts.montserrat(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
       ),
     ),
-    padding: const WidgetStatePropertyAll(
-      EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-    ),
-  ),
-);
+  );
+}
