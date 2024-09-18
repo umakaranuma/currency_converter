@@ -1,8 +1,11 @@
+import 'package:currency_converter_mobil_app/core/theme_data/colour_scheme.dart';
+import 'package:currency_converter_mobil_app/modules/home_screen/presenters/widgets/confirmation_dialog_box.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:currency_converter_mobil_app/modules/home_screen/infra/bloc/currency_cubit.dart';
 import 'package:currency_converter_mobil_app/modules/home_screen/infra/bloc/currency_state.dart';
 import 'package:currency_converter_mobil_app/modules/home_screen/infra/models/currency_model.dart';
+import 'package:shimmer/shimmer.dart'; // Import shimmer
 
 class CurrencyConverterScreen extends StatefulWidget {
   const CurrencyConverterScreen({super.key});
@@ -12,18 +15,17 @@ class CurrencyConverterScreen extends StatefulWidget {
 }
 
 class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
-  String baseCurrency = 'USD'; // Default base currency
-  double amount = 1.0; // Default amount
+  String baseCurrency = 'USD';
+  double amount = 1.0;
   final TextEditingController amountController = TextEditingController();
 
-  // List to hold the target currencies
-  List<String> targetCurrencies = ['EUR']; // Initially one currency
+  List<String> targetCurrencies = ['EUR'];
 
   @override
   void initState() {
     super.initState();
     amountController.text = amount.toString();
-    // Fetch currency rates when the screen initializes
+
     context.read<CurrencyCubit>().fetchConversionRates();
   }
 
@@ -31,7 +33,10 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: const Text('Advanced Exchanger')),
+      appBar: AppBar(
+        title: const Text('Advanced Exchanger'),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -39,26 +44,23 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
           children: [
             const Text("INSERT AMOUNT:"),
             const SizedBox(height: 10),
-            // Single container with TextField and Dropdown
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey.shade700 : Colors.white,
-                border:
-                    Border.all(color: Colors.grey), // Border for the container
+                color: isDarkMode
+                    ? AppColors.backgroundDark
+                    : AppColors.backgroundLight,
+                border: Border.all(color: AppColors.borderColor),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  // Left side: TextField for amount
                   Expanded(
                     child: TextField(
                       controller: amountController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        // labelText: 'Insert Amount',
-                        border: InputBorder
-                            .none, // Remove inner border to make it seamless
+                        border: InputBorder.none,
                       ),
                       onChanged: (value) {
                         setState(() {
@@ -67,14 +69,11 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                       },
                     ),
                   ),
-                  const SizedBox(
-                      width: 16), // Space between TextField and Dropdown
-
-                  // Right side: Dropdown for base currency
+                  const SizedBox(width: 16),
                   BlocBuilder<CurrencyCubit, CurrencyState>(
                     builder: (context, state) {
                       if (state is CurrencyLoading) {
-                        return const CircularProgressIndicator();
+                        return _buildShimmerDropdown();
                       } else if (state is CurrencyLoaded) {
                         return DropdownButton<String>(
                           value: baseCurrency,
@@ -89,7 +88,7 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                               baseCurrency = newValue!;
                             });
                           },
-                          underline: Container(), // Remove default underline
+                          underline: Container(),
                           isDense: true,
                         );
                       } else if (state is CurrencyError) {
@@ -101,59 +100,64 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20), // Add some spacing
-
+            const SizedBox(height: 20),
             BlocBuilder<CurrencyCubit, CurrencyState>(
               builder: (context, state) {
                 if (state is CurrencyLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return _buildShimmerCurrencyList();
                 } else if (state is CurrencyLoaded) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text("CONVERT TO :"),
                       const SizedBox(height: 10),
-
-                      // List of target currencies with conversion amounts
                       ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: targetCurrencies.length,
                         itemBuilder: (context, index) {
                           return _buildTargetCurrencyRow(
-                            state.rates,
-                            targetCurrencies[index],
-                            (newValue) {
+                            rates: state.rates,
+                            selectedCurrency: targetCurrencies[index],
+                            onCurrencyChanged: (newValue) {
                               setState(() {
                                 targetCurrencies[index] = newValue!;
                               });
                             },
-                            () {
-                              setState(() {
-                                targetCurrencies.removeAt(index);
-                              });
+                            onDelete: () {
+                              ConfirmationDialog.show(
+                                context: context,
+                                onDelete: () {
+                                  setState(() {
+                                    targetCurrencies.removeAt(index);
+                                  });
+                                },
+                              );
                             },
                           );
                         },
                       ),
                       const SizedBox(height: 20),
-
-                      // Button to add more converters
                       Center(
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              targetCurrencies
-                                  .add('EUR'); // Default added currency
+                              targetCurrencies.add('EUR');
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green, // Background color
+                            backgroundColor: AppColors.primaryColor,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          child: const Text('+ ADD CONVERTER'),
+                          child: Text(
+                            '+ ADD CONVERTER',
+                            style: TextStyle(
+                                color: isDarkMode
+                                    ? AppColors.textLight
+                                    : AppColors.textDark),
+                          ),
                         ),
                       ),
                     ],
@@ -170,12 +174,12 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
     );
   }
 
-  _buildTargetCurrencyRow(
-    List<Currency> rates,
-    String selectedCurrency,
-    ValueChanged<String?> onCurrencyChanged,
-    VoidCallback onDelete,
-  ) {
+  _buildTargetCurrencyRow({
+    required List<Currency> rates,
+    required String selectedCurrency,
+    required ValueChanged<String?> onCurrencyChanged,
+    required VoidCallback onDelete,
+  }) {
     double convertedAmount = _calculateConversion(rates, selectedCurrency);
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -184,20 +188,19 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Container with Converted Amount and Dropdown
           Expanded(
             child: Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey.shade700 : Colors.white,
-                border:
-                    Border.all(color: Colors.grey), // Border for the container
-                borderRadius: BorderRadius.circular(12), // Rounded corners
+                color: isDarkMode
+                    ? AppColors.backgroundDark
+                    : AppColors.backgroundLight,
+                border: Border.all(color: AppColors.borderColor),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  // Left: Converted amount text
                   Expanded(
                     flex: 3,
                     child: Text(
@@ -208,35 +211,27 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 16), // Space between text and dropdown
-
-                  // Right: Dropdown for selecting target currency
+                  const SizedBox(width: 16),
                   DropdownButton<String>(
                     value: selectedCurrency,
                     items: rates.map((Currency currency) {
                       return DropdownMenuItem<String>(
                         value: currency.code,
-                        child: Text(currency.code), // Currency code
+                        child: Text(currency.code),
                       );
                     }).toList(),
                     onChanged: onCurrencyChanged,
-                    underline: Container(), // Remove the default underline
-                    isDense: true, // Make it compact
-                    icon: const Icon(
-                        Icons.arrow_drop_down), // Custom dropdown icon
+                    underline: Container(),
+                    isDense: true,
+                    icon: const Icon(Icons.arrow_drop_down),
                   ),
                 ],
               ),
             ),
           ),
-
-          const SizedBox(
-              width: 8), // Space between the container and delete button
-
-          // Delete Icon Button (outside the container)
+          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
+            icon: const Icon(Icons.delete, color: AppColors.errorColor),
             onPressed: onDelete,
           ),
         ],
@@ -244,12 +239,50 @@ class CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
     );
   }
 
-  // Calculate conversion for a specific target currency
   double _calculateConversion(List<Currency> rates, String targetCurrency) {
     final baseRate =
         rates.firstWhere((rate) => rate.code == baseCurrency).value;
     final targetRate =
         rates.firstWhere((rate) => rate.code == targetCurrency).value;
     return (amount / baseRate) * targetRate;
+  }
+
+  // Shimmer effect for dropdown
+  Widget _buildShimmerDropdown() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        width: 100,
+        height: 30,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(6),
+        ),
+      ),
+    );
+  }
+
+  // Shimmer effect for currency list
+  Widget _buildShimmerCurrencyList() {
+    return Column(
+      children: List.generate(3, (index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        );
+      }),
+    );
   }
 }

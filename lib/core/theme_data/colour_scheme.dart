@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 
+class AppColors {
+  static const Color primaryColor =
+      Color(0xFF53AE56); // Your primary button color
+  static const Color textDark = Color(0xFF242424); // Text color for light mode
+  static const Color textLight = Colors.white; // Text color for dark mode
+  static const Color backgroundDark =
+      Colors.grey; // Background color for dark mode containers
+  static const Color backgroundLight =
+      Colors.white; // Background color for light mode containers
+  static const Color borderColor = Colors.grey; // Border color for containers
+  static const Color errorColor =
+      Colors.red; // Color for error messages or icons
+}
+
 final ColorScheme lightColorScheme = ColorScheme(
   brightness: Brightness.light,
   primary: Colors.blue, // Primary color for light mode
