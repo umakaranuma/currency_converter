@@ -4,13 +4,35 @@ A new Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Follow the steps below to clone the repository, install dependencies, and run the app.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Make sure you have the following installed:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Flutter SDK](https://flutter.dev/docs/get-started/install)
+- [Git](https://git-scm.com/)
+- An IDE such as [VSCode](https://code.visualstudio.com/) or [Android Studio](https://developer.android.com/studio)
+
+### Clone the Repository
+
+To clone this repository, run the following command:
+
+```bash
+git clone https://github.com/umakaranuma/currency_converter.git
+
+cd currency_converter
+
+flutter pub get
+
+flutter run
+
+in here after successfully run this you can get the initial ui as splash screen then as you mentioned ui 
+this ui will change as per your system color theme  (dark mode or light mode) 
+
+
+
+...Folder Structure 
+in lib
+ core(in here i added all the base related to the colortheme , texttheme and the base api related configurations)
+ modules( in here there is the screens, widgets, datasource, models, bloc  all are added in here  )

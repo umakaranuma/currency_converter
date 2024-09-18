@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Currency Converter',
       themeMode:
-          ThemeMode.light, // Automatically switch based on system settings
+          ThemeMode.system, // Automatically switch based on system settings
       theme: ThemeData(
         colorScheme: lightColorScheme, // Use light color scheme
         useMaterial3: true, // Use Material 3 design
